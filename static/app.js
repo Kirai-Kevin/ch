@@ -2,7 +2,7 @@ class Chatbox {
     constructor() {
         this.args = {
             openButton: document.querySelector('.chatbox__button'),
-            chatbox: document.querySelector('.chatbox__support'),
+            chatBox: document.querySelector('.chatbox__support'),
             sendButton: document.querySelector('.send__button')
         }
 
@@ -11,38 +11,37 @@ class Chatbox {
     }
 
     display() {
-        const { openButton, chatbox, sendButton } = this.args;
+        const {openButton, chatBox, sendButton} = this.args;
 
-        openButton.addEventListener('click', () => this.toggleState(chatbox));
+        openButton.addEventListener('click', () => this.toggleState(chatBox))
+        sendButton.addEventListener('click', () => this.onSendButton(chatBox))
 
-        sendButton.addEventListener('click', () => this.onSendButton(chatbox));
-
-        const node = chatbox.querySelector('input');
-        node.addEventListener('keyup', ({ key }) => {
-            if (key === 'Enter') {
-                this.onSendButton(chatbox);
+        const node = chatBox.querySelector('input');
+        node.addEventListener("keyup", ({key}) => {
+            if (key === "Enter") {
+                this.onSendButton(chatBox)
             }
-        });
+        })
     }
 
     toggleState(chatbox) {
         this.state = !this.state;
 
-        if (this.state) {
-            chatbox.classList.add('chatbox--active');
+        if(this.state) {
+            chatbox.classList.add('chatbox--active')
         } else {
-            chatbox.classList.remove('chatbox--active');
+            chatbox.classList.remove('chatbox--active')
         }
     }
 
     onSendButton(chatbox) {
-        let textField = chatbox.querySelector('input');
-        let text1 = textField.value;
+        const textField = chatbox.querySelector('input');
+        const text1 = textField.value
         if (text1 === "") {
             return;
         }
 
-        let msg1 = { name: "User", message: text1 };
+        let msg1 = { name: "User", message: text1 }
         this.messages.push(msg1);
 
         fetch(`${$SCRIPT_ROOT}/predict`, {
@@ -50,30 +49,42 @@ class Chatbox {
             body: JSON.stringify({ message: text1 }),
             mode: 'cors',
             headers: {
-                'Content-Type': 'application/json'
-            }
+              'Content-Type': 'application/json'
+            },
         })
-            .then(r => r.json())
-            .then(r => {
-                let msg2 = { name: "Sam", message: r.answer };
+        .then(r => r.json())
+        .then(r => {
+            if (r.error) {
+                const msg2 = { name: "Sam", message: r.error };
                 this.messages.push(msg2);
-                this.updateChatText(chatbox);
-                textField.value = '';
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                this.updateChatText(chatbox);
-                textField.value = '';
-            });
+            } else if (r.answer) {
+                const msg2 = { name: "Sam", message: r.answer };
+                this.messages.push(msg2);
+            } else {
+                const msg2 = { name: "Sam", message: "I received an unexpected response. Please try again." };
+                this.messages.push(msg2);
+            }
+            this.updateChatText(chatbox)
+            textField.value = ''
+        }).catch((error) => {
+            console.error('Error:', error);
+            const msg2 = { name: "Sam", message: "Sorry, there was an error sending your message. Please try again." };
+            this.messages.push(msg2);
+            this.updateChatText(chatbox)
+            textField.value = ''
+        });
     }
 
     updateChatText(chatbox) {
         let html = '';
-        this.messages.slice().reverse().forEach(function (item) {
-            if (item.name === "Sam") {
-                html += '<div class="messages__item messages__item--visitor">' + item.message + '</div>';
-            } else {
-                html += '<div class="messages__item messages__item--operator">' + item.message + '</div>';
+        this.messages.slice().reverse().forEach(function(item, index) {
+            if (item.name === "Sam")
+            {
+                html += '<div class="messages__item messages__item--visitor">' + item.message + '</div>'
+            }
+            else
+            {
+                html += '<div class="messages__item messages__item--operator">' + item.message + '</div>'
             }
         });
 
