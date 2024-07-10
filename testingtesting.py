@@ -1,5 +1,6 @@
 import os
-from flask import Flask, render_template, jsonify, requests
+from flask import Flask, render_template, jsonify
+from flask import request
 from dotenv import load_dotenv
 import replicate
 import logging
@@ -32,7 +33,10 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        data = request.json
+        if not request.is_json:
+            return jsonify({"error": "Invalid input, JSON expected"}), 400
+
+        data = request.get_json()
         user_message = data.get("message")
         
         if not user_message:
